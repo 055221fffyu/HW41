@@ -1,0 +1,211 @@
+<html>
+
+<head>
+  <title>Express</title>
+  <link rel="stylesheet" href="/stylesheets/style.css">
+</head>
+
+<body>
+  <div class="main-title">酒類價格查詢系統</div>
+
+  <h2>新增酒價資料</h2>
+  <form id="priceForm" onsubmit="return false;">
+    <table class="form-table unified-table">
+      <tr>
+        <th>年份</th>
+        <th>月份</th>
+        <th>酒</th>
+        <th>米酒</th>
+        <th>啤酒</th>
+        <th>高粱酒</th>
+        <th>其他酒</th>
+        <th></th>
+      </tr>
+      <tr>
+        <td><select name="year" id="addYear" required></select></td>
+        <td><select name="month" id="addMonth"><option value=""></option></select></td>
+        <td><input type="text" name="price_14" required></td>
+        <td><input type="text" name="price_133" required></td>
+        <td><input type="text" name="price_134" required></td>
+        <td><input type="text" name="price_135" required></td>
+        <td><input type="text" name="price_136" required></td>
+        <td style="text-align:center;"><button type="submit">送出</button></td>
+      </tr>
+    </table>
+  </form>
+  <p id="resultMsg"></p>
+
+  <h2>查詢酒價資料</h2>
+  <form id="searchForm" onsubmit="return false;">
+    <table class="form-table unified-table">
+      <tr>
+        <th>年份</th>
+        <th>月份</th>
+        <th>酒</th>
+        <th>米酒</th>
+        <th>啤酒</th>
+        <th>高粱酒</th>
+        <th>其他酒</th>
+        <th></th>
+      </tr>
+      <tr>
+        <td><select name="year" id="searchYear"></select></td>
+        <td><select name="month" id="searchMonth"></select></td>
+        <td><input type="text" name="price_14"></td>
+        <td><input type="text" name="price_133"></td>
+        <td><input type="text" name="price_134"></td>
+        <td><input type="text" name="price_135"></td>
+        <td><input type="text" name="price_136"></td>
+        <td style="text-align:center;"><button type="submit">查詢</button></td>
+      </tr>
+    </table>
+  </form>
+  <p id="searchMsg"></p>
+
+  <h2>酒類價格資料表</h2>
+  <table id="pricesTable">
+    <thead>
+      <tr>
+        <th>日期</th>
+        <th>酒</th>
+        <th>米酒</th>
+        <th>啤酒</th>
+        <th>高粱酒</th>
+        <th>其他酒</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    async function loadPrices(query = null) {
+      let data = [];
+      if (query) {
+        // 使用 POST 查詢
+        const res = await fetch('/api/prices', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(query)
+        });
+        data = await res.json();
+      } else {
+        // 預設載入全部
+        const res = await fetch('/api/prices');
+        data = await res.json();
+      }
+      const tbody = document.querySelector('#pricesTable tbody');
+      tbody.innerHTML = '';
+      if(data.length === 0) {
+        document.getElementById('searchMsg').textContent = '查無資料';
+      } else {
+        document.getElementById('searchMsg').textContent = '';
+        data.forEach(row => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${row.date}</td><td>${row.酒}</td><td>${row.米酒}</td><td>${row.啤酒}</td><td>${row.高粱酒}</td><td>${row.其他酒}</td><td><button class='delete-btn'>刪除</button></td>`;
+          tr.querySelector('.delete-btn').onclick = async function() {
+            if(confirm('確定要刪除這筆資料嗎？')) {
+              const res = await fetch('/api/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  date: row.date,
+                  price_14: row.酒,
+                  price_133: row.米酒,
+                  price_134: row.啤酒,
+                  price_135: row.高粱酒,
+                  price_136: row.其他酒
+                })
+              });
+              const msg = await res.text();
+              alert(msg);
+              loadPrices();
+            }
+          };
+          tbody.appendChild(tr);
+        });
+      }
+    }
+    loadPrices();
+
+    // 年月下拉選單初始化
+    function fillYearMonth(yearId, monthId) {
+      const yearSel = document.getElementById(yearId);
+      const monthSel = document.getElementById(monthId);
+      yearSel.innerHTML = '';
+      monthSel.innerHTML = '';
+      // 年份可不填，第一個選項為空白
+      const emptyYearOpt = document.createElement('option');
+      emptyYearOpt.value = '';
+      emptyYearOpt.textContent = '';
+      yearSel.appendChild(emptyYearOpt);
+      for(let y = 70; y <= 114; y++) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        yearSel.appendChild(opt);
+      }
+      // 月份可不填，第一個選項為空白
+      const emptyOpt = document.createElement('option');
+      emptyOpt.value = '';
+      emptyOpt.textContent = '';
+      monthSel.appendChild(emptyOpt);
+      for(let m = 1; m <= 12; m++) {
+        const opt = document.createElement('option');
+        opt.value = m.toString().padStart(2, '0');
+        opt.textContent = m;
+        monthSel.appendChild(opt);
+      }
+      // 預設年份、月份都為空
+      yearSel.value = '';
+      monthSel.value = '';
+    }
+    fillYearMonth('addYear', 'addMonth');
+    fillYearMonth('searchYear', 'searchMonth');
+
+    document.getElementById('priceForm').addEventListener('submit', async function() {
+      const form = this;
+      const year = form.year.value;
+      const month = form.month.value;
+      let date = '';
+      if(year && month) date = `${year}年${parseInt(month, 10)}月`;
+      else if(year) date = `${year}年`;
+      const body = {
+        date,
+        price_14: form.price_14.value,
+        price_133: form.price_133.value,
+        price_134: form.price_134.value,
+        price_135: form.price_135.value,
+        price_136: form.price_136.value
+      };
+      const res = await fetch('/api/insert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const msg = await res.text();
+      document.getElementById('resultMsg').textContent = msg;
+      loadPrices();
+    });
+
+    document.getElementById('searchForm').addEventListener('submit', async function() {
+      const form = this;
+      const year = form.year.value;
+      const month = form.month.value;
+      let date = '';
+      if(year && month) date = `${year}年${parseInt(month, 10)}月`;
+      else if(year) date = `${year}年`;
+      else if(month) date = `${parseInt(month, 10)}月`;
+      const query = {};
+      if(date) query.date = date;
+      if(form.price_14.value) query.price_14 = form.price_14.value;
+      if(form.price_133.value) query.price_133 = form.price_133.value;
+      if(form.price_134.value) query.price_134 = form.price_134.value;
+      if(form.price_135.value) query.price_135 = form.price_135.value;
+      if(form.price_136.value) query.price_136 = form.price_136.value;
+      await loadPrices(query);
+    });
+  </script>
+</body>
+
+</html>

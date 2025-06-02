@@ -1,0 +1,234 @@
+body {
+  background: linear-gradient(135deg, #f7f7fa 60%, #e0e7ef 100%);
+  font-family: 'Segoe UI', 'Microsoft JhengHei', Arial, sans-serif;
+  color: #222;
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  text-align: center;
+  margin-top: 36px;
+  color: #7b3f00;
+  letter-spacing: 3px;
+  font-size: 2.2em;
+  font-weight: bold;
+  text-shadow: 1px 2px 8px #e0c9a6;
+  position: relative;
+}
+h1::after {
+  content: '\1F377'; /* 酒杯emoji */
+  margin-left: 12px;
+  font-size: 1.1em;
+  vertical-align: middle;
+}
+
+h2 {
+  color: #7b3f00;
+  margin-top: 32px;
+  margin-bottom: 12px;
+  border-left: 6px solid #b97a56;
+  padding-left: 12px;
+  background: #f8efe6;
+  border-radius: 4px;
+  font-size: 1.25em;
+  font-weight: 600;
+  box-shadow: 0 2px 8px #f3e3d3;
+}
+
+.main-title {
+  text-align: center;
+  font-size: 2.4em;
+  font-weight: bold;
+  color: #7b3f00;
+  letter-spacing: 4px;
+  margin-bottom: 28px;
+  text-shadow: 0 2px 12px #e0c9a6, 0 1px 0 #fffbe9;
+  padding: 16px 0 10px 0;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #fffbe9 60%, #f8efe6 100%);
+  box-shadow: 0 4px 18px #e0c9a6a0;
+  border-bottom: 4px solid #b97a56;
+  position: relative;
+}
+.main-title::after {
+  content: '\1F37A'; /* 酒杯emoji */
+  margin-left: 18px;
+  font-size: 1.1em;
+  vertical-align: middle;
+}
+form {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 22px 24px 14px 24px;
+  margin-bottom: 22px;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 90%;
+  min-width: 700px;
+}
+form label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  font-weight: 500;
+  color: #7b3f00;
+  letter-spacing: 1px;
+  min-width: 220px;
+}
+form input[type="text"],
+form input[type="number"],
+form input[type="date"] {
+  padding: 7px 12px;
+  border: 1.5px solid #b97a56;
+  border-radius: 5px;
+  margin-left: 16px;
+  margin-bottom: 0;
+  width: 220px;
+  font-size: 1em;
+  background: #f8efe6;
+  color: #7b3f00;
+  transition: border 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+form input:focus {
+  border: 1.5px solid #7b3f00;
+  outline: none;
+  box-shadow: 0 0 6px #e0c9a6;
+}
+form button {
+  background: linear-gradient(90deg, #b97a56 60%, #7b3f00 100%);
+  color: #fffbe9;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 22px;
+  font-size: 1.08em;
+  cursor: pointer;
+  margin-top: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  box-shadow: 0 2px 8px #e0c9a6a0;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+form button:hover {
+  background: linear-gradient(90deg, #7b3f00 60%, #b97a56 100%);
+  box-shadow: 0 4px 16px #b97a56a0;
+}
+#resultMsg, #searchMsg, #deleteMsg {
+  margin: 10px 0 0 0;
+  font-size: 1.05em;
+  color: #b97a56;
+  font-weight: 500;
+  text-align: center;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  background: #fffbe9;
+  box-shadow: 0 4px 16px #e0c9a6a0;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 36px;
+  margin-top: 18px;
+}
+table th, table td {
+  border: 1.5px solid #e0c9a6;
+  padding: 12px 10px;
+  text-align: center;
+  font-size: 1.05em;
+}
+table th {
+  background: linear-gradient(90deg, #b97a56 60%, #7b3f00 100%);
+  color: #fffbe9;
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-size: 1.08em;
+}
+table tr:nth-child(even) {
+  background: #f8efe6;
+}
+table tr:hover {
+  background: #ffe4b8;
+  transition: background 0.2s;
+}
+@media (max-width: 700px) {
+  form, table {
+    max-width: 100%;
+    font-size: 0.98em;
+  }
+  table th, table td {
+    padding: 7px 2px;
+  }
+  h1 {
+    font-size: 1.3em;
+  }
+  h2 {
+    font-size: 1.1em;
+  }
+}
+a {
+  color: #b97a56;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+a:hover {
+  color: #7b3f00;
+}
+
+/* 讓所有表格（含form-table、unified-table）置中 */
+table, .form-table, .unified-table {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 讓表單下的表格寬度自動、內容置中 */
+form table.form-table, form table.unified-table {
+  width: 100%;
+  min-width: 0;
+}
+
+/* 讓查詢、新增表單區塊與資料表左右對齊 */
+@media (min-width: 700px) {
+  form {
+    width: 90%;
+    min-width: 700px;
+    margin-left: 0;
+    margin-right: auto;
+    align-items: stretch;
+    max-width: 100%;
+  }
+  #pricesTable {
+    width: 90%;
+    min-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+#pricesTable {
+  width: 90%;
+  min-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.delete-btn {
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 16px;
+  font-size: 1em;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 6px #e0c9a6a0;
+}
+.delete-btn:hover {
+  background: #c0392b;
+}
+
