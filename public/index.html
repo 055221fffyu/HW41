@@ -1,211 +1,1113 @@
-<html>
-
+<!DOCTYPE html>
+<html lang="zh-TW">
 <head>
-  <title>Express</title>
-  <link rel="stylesheet" href="/stylesheets/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>酒類價格查詢系統 | Professional Alcohol Price System</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <style>
+    /* 全局設定 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      /* 背景色調：偏黃、木質色溫暖風格，加入淡黃色 */
+      background: linear-gradient(135deg, #FAF9D9 0%, #f5ebe0 100%); /* 淡黃色到淺木色漸變 */
+      min-height: 100vh;
+      color: #333; /* 預設文字顏色，保持可讀性 */
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* 頁面標題區塊 */
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      /* 背景：柔和的半透明白色，帶有模糊效果，與新背景色協調 */
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08); /* 柔和陰影 */
+    }
+
+    .main-title {
+      font-size: 2.8rem;
+      font-weight: 700;
+      /* 漸變色：從暖棕色到柔和金色，呼應木質溫暖主題，加入更明亮的黃色 */
+      background: linear-gradient(45deg, #A0522D, #FFC125); /* Sienna 到 Mango */
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #777; /* 略淺，與主標題形成層次感 */
+      font-size: 1.2rem;
+      font-weight: 300;
+    }
+
+    /* 面板佈局 */
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+
+    /* 卡片樣式 */
+    .card {
+      /* 背景：與 header 類似的半透明白色，保持一致 */
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      border-radius: 18px;
+      padding: 25px;
+      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.07);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    .card h2 {
+      color: #555; /* 略深，但非純黑 */
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card h2::before {
+      content: '';
+      width: 4px;
+      height: 22px;
+      /* 標題裝飾線：與主標題漸變色一致 */
+      background: linear-gradient(45deg, #A0522D, #FFC125);
+      border-radius: 2px;
+    }
+
+    /* 表格樣式 (Form Table) */
+    .form-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 15px;
+      table-layout: fixed;
+    }
+
+    .form-table th, .form-table td {
+      padding: 12px 10px;
+      border-bottom: 1px solid #eee;
+      text-align: center;
+    }
+
+    /* 列寬設定 (保持不變或微調) */
+    .form-table tr th:nth-child(1), .form-table tr td:nth-child(1) { width: 15%; }
+    .form-table tr th:nth-child(2), .form-table tr td:nth-child(2) { width: 10%; }
+    .form-table tr th:nth-child(3), .form-table tr td:nth-child(3),
+    .form-table tr th:nth-child(4), .form-table tr td:nth-child(4),
+    .form-table tr th:nth-child(5), .form-table tr td:nth-child(5),
+    .form-table tr th:nth-child(6), .form-table tr td:nth-child(6),
+    .form-table tr th:nth-child(7), .form-table tr td:nth-child(7) { width: 12%; }
+    .form-table tr th:nth-child(8), .form-table tr td:nth-child(8) { width: 10%; }
+
+    .form-table th {
+      /* 表格頭部漸變色：深木質棕色系 */
+      background: linear-gradient(45deg, #604020, #805030); /* Dark Brown to Medium Brown */
+      color: white;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border-radius: 8px 8px 0 0;
+      white-space: nowrap;
+    }
+
+    .form-table input, .form-table select {
+      width: 100%;
+      padding: 10px 8px;
+      border: 1px solid #dcdcdc;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+      min-width: 0;
+    }
+
+    .form-table input:focus, .form-table select:focus {
+      outline: none;
+      /* 焦點邊框顏色：與主題色協調的棕色 */
+      border-color: #A0522D; /* Sienna */
+      box-shadow: 0 0 0 3px rgba(160, 82, 45, 0.15); /* 焦點陰影 */
+    }
+
+    /* 按鈕樣式 */
+    .btn {
+      /* 按鈕漸變色：溫暖的棕色系，加入淡黃色 */
+      background: linear-gradient(45deg, #CD853F, #EEE8AA); /* Peru 到 PaleGoldenrod */
+      color: white;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.95rem;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 25px rgba(160, 82, 45, 0.3); /* 懸停陰影 */
+    }
+
+    .btn-danger {
+      /* 刪除按鈕：柔和的土橘色系，避免鮮紅 */
+      background: linear-gradient(45deg, #e47d00, #ffb366); /* Dark Orange to Light Orange */
+    }
+
+    .btn-danger:hover {
+      box-shadow: 0 12px 25px rgba(228, 125, 0, 0.3);
+    }
+
+    /* 訊息框 */
+    .message {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin: 10px 0;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .message.success {
+      background: rgba(144, 238, 144, 0.2); /* 淺綠，偏自然系 */
+      color: #2E8B57; /* SeaGreen */
+      border: 1px solid rgba(46, 139, 87, 0.3);
+    }
+
+    .message.error {
+      background: rgba(255, 182, 193, 0.2); /* 淺粉紅，柔和錯誤提示 */
+      color: #DC143C; /* Crimson */
+      border: 1px solid rgba(220, 20, 60, 0.3);
+    }
+
+    .chart-section {
+      grid-column: 1 / -1;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      border-radius: 18px;
+      padding: 30px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.07);
+      margin-bottom: 30px;
+    }
+
+    .chart-controls {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .chart-controls select {
+      padding: 10px 15px;
+      border: 1px solid #dcdcdc;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    /* 新增的酒類選擇區域樣式 */
+    .chart-alcohol-checkboxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-top: 20px;
+      align-items: center;
+    }
+
+    .chart-alcohol-checkboxes label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #444;
+    }
+
+    .chart-alcohol-checkboxes input[type="checkbox"] {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #999;
+      border-radius: 5px;
+      cursor: pointer;
+      display: inline-block;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .chart-alcohol-checkboxes input[type="checkbox"]:checked {
+      /* 選中邊框和背景色：與主題色協調的棕色 */
+      border-color: #A0522D; /* Sienna */
+      background-color: #A0522D; /* Sienna */
+    }
+
+    .chart-alcohol-checkboxes input[type="checkbox"]:checked::before {
+      content: '✓';
+      display: block;
+      color: white;
+      font-size: 16px;
+      line-height: 16px;
+      text-align: center;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* 顏色指示器 */
+    .chart-alcohol-checkboxes .color-box {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-right: 6px;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .chart-container {
+      position: relative;
+      height: 450px;
+      margin-bottom: 20px;
+    }
+
+    .data-table-section {
+      grid-column: 1 / -1;
+    }
+
+    /* 資料表格 */
+    #pricesTable {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    #pricesTable th {
+      /* 表格頭部漸變色：與表單頭部一致的深木質棕色系 */
+      background: linear-gradient(45deg, #604020, #805030);
+      color: white;
+      padding: 16px 12px;
+      font-weight: 600;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    #pricesTable td {
+      padding: 14px;
+      text-align: center;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 0.9rem;
+    }
+
+    #pricesTable tr:hover {
+      background: rgba(128, 80, 48, 0.05); /* 懸停背景色，與主色調呼應 */
+    }
+
+    /* 統計數字網格 */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr); /* 創建 6 個等寬列，強制並排 */
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 25px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    }
+
+
+    .stat-number {
+      font-size: 2.2rem;
+      font-weight: 700;
+      /* 統計數字顏色：溫暖的棕色系 */
+      color: #A0522D; /* Sienna */
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      color: #666;
+      font-size: 0.95rem;
+    }
+
+    /* Media query for smaller screens */
+    @media (max-width: 768px) {
+      /* 在小螢幕上，允許自動換行，但最小寬度減小以適應 */
+      .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+      }
+      .main-title {
+        font-size: 2.2rem;
+      }
+      .subtitle {
+        font-size: 1rem;
+      }
+      .card h2 {
+        font-size: 1.3rem;
+      }
+
+      .chart-controls {
+        justify-content: center;
+      }
+
+      .form-table th, .form-table td {
+        padding: 8px 5px;
+        font-size: 0.7rem;
+      }
+
+      .form-table input, .form-table select {
+        font-size: 0.75rem;
+        padding: 6px 5px;
+      }
+      .btn {
+        padding: 8px 10px;
+        font-size: 0.75rem;
+      }
+      .stat-number {
+        font-size: 1.8rem;
+      }
+      .stat-label {
+        font-size: 0.85rem;
+      }
+      .chart-container {
+        height: 350px;
+      }
+    }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      /* 加載動畫顏色：與主題色協調的棕色 */
+      border-top: 3px solid #A0522D; /* Sienna */
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 
 <body>
-  <div class="main-title">酒類價格查詢系統</div>
+<div class="container">
+  <div class="header">
+    <h1 class="main-title">酒類價格查詢系統</h1>
+    <p class="subtitle">Professional Alcohol Price Management System</p>
+  </div>
 
-  <h2>新增酒價資料</h2>
-  <form id="priceForm" onsubmit="return false;">
-    <table class="form-table unified-table">
-      <tr>
-        <th>年份</th>
-        <th>月份</th>
-        <th>酒</th>
-        <th>米酒</th>
-        <th>啤酒</th>
-        <th>高粱酒</th>
-        <th>其他酒</th>
-        <th></th>
-      </tr>
-      <tr>
-        <td><select name="year" id="addYear" required></select></td>
-        <td><select name="month" id="addMonth"><option value=""></option></select></td>
-        <td><input type="text" name="price_14" required></td>
-        <td><input type="text" name="price_133" required></td>
-        <td><input type="text" name="price_134" required></td>
-        <td><input type="text" name="price_135" required></td>
-        <td><input type="text" name="price_136" required></td>
-        <td style="text-align:center;"><button type="submit">送出</button></td>
-      </tr>
-    </table>
-  </form>
-  <p id="resultMsg"></p>
+  <div id="statsSection" class="stats-grid">
+  </div>
 
-  <h2>查詢酒價資料</h2>
-  <form id="searchForm" onsubmit="return false;">
-    <table class="form-table unified-table">
-      <tr>
-        <th>年份</th>
-        <th>月份</th>
-        <th>酒</th>
-        <th>米酒</th>
-        <th>啤酒</th>
-        <th>高粱酒</th>
-        <th>其他酒</th>
-        <th></th>
-      </tr>
-      <tr>
-        <td><select name="year" id="searchYear"></select></td>
-        <td><select name="month" id="searchMonth"></select></td>
-        <td><input type="text" name="price_14"></td>
-        <td><input type="text" name="price_133"></td>
-        <td><input type="text" name="price_134"></td>
-        <td><input type="text" name="price_135"></td>
-        <td><input type="text" name="price_136"></td>
-        <td style="text-align:center;"><button type="submit">查詢</button></td>
-      </tr>
-    </table>
-  </form>
-  <p id="searchMsg"></p>
+  <div class="chart-section">
+    <h2>價格趨勢圖表</h2>
+    <div class="chart-controls">
+      <label>年份範圍：</label>
+      <select id="chartYearStart"></select>
+      <span>至</span>
+      <select id="chartYearEnd"></select>
+      <button class="btn" onclick="updateChart()">更新圖表</button>
+    </div>
 
-  <h2>酒類價格資料表</h2>
-  <table id="pricesTable">
-    <thead>
-      <tr>
-        <th>日期</th>
-        <th>酒</th>
-        <th>米酒</th>
-        <th>啤酒</th>
-        <th>高粱酒</th>
-        <th>其他酒</th>
-        <th>操作</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <div class="chart-alcohol-checkboxes" id="alcoholTypeCheckboxes">
+    </div>
 
-  <script>
-    async function loadPrices(query = null) {
+    <div class="chart-container">
+      <canvas id="priceChart"></canvas>
+    </div>
+  </div>
+
+  <div class="dashboard">
+    <div class="card">
+      <h2>查詢酒價資料</h2>
+      <form id="searchForm" onsubmit="return false;">
+        <table class="form-table">
+          <tr>
+            <th>年份</th>
+            <th>月份</th>
+            <th>酒</th>
+            <th>米酒</th>
+            <th>啤酒</th>
+            <th>高粱酒</th>
+            <th>其他酒</th>
+            <th></th>
+          </tr>
+          <tr>
+            <td><select name="year" id="searchYear"></select></td>
+            <td><select name="month" id="searchMonth"></select></td>
+            <td><input type="number" step="0.01" name="price_14" placeholder="價格查詢"></td>
+            <td><input type="number" step="0.01" name="price_133" placeholder="價格查詢"></td>
+            <td><input type="number" step="0.01" name="price_134" placeholder="價格查詢"></td>
+            <td><input type="number" step="0.01" name="price_135" placeholder="價格查詢"></td>
+            <td><input type="number" step="0.01" name="price_136" placeholder="價格查詢"></td>
+            <td><button type="submit" class="btn">查詢</button></td>
+          </tr>
+        </table>
+      </form>
+      <div id="searchMsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>新增酒價資料</h2>
+      <form id="priceForm" onsubmit="return false;">
+        <table class="form-table">
+          <tr>
+            <th>年份</th>
+            <th>月份</th>
+            <th>酒</th>
+            <th>米酒</th>
+            <th>啤酒</th>
+            <th>高粱酒</th>
+            <th>其他酒</th>
+            <th></th>
+          </tr>
+          <tr>
+            <td><select name="year" id="addYear" required></select></td>
+            <td><select name="month" id="addMonth"><option value=""></option></select></td>
+            <td><input type="number" step="0.01" name="price_14" required placeholder="0.00"></td>
+            <td><input type="number" step="0.01" name="price_133" required placeholder="0.00"></td>
+            <td><input type="number" step="0.01" name="price_134" required placeholder="0.00"></td>
+            <td><input type="number" step="0.01" name="price_135" required placeholder="0.00"></td>
+            <td><input type="number" step="0.01" name="price_136" required placeholder="0.00"></td>
+            <td><button type="submit" class="btn">送出</button></td>
+          </tr>
+        </table>
+      </form>
+      <div id="resultMsg"></div>
+    </div>
+
+    <div class="card data-table-section">
+      <h2>酒類價格資料表</h2>
+      <table id="pricesTable">
+        <thead>
+        <tr>
+          <th>日期</th>
+          <th>酒</th>
+          <th>米酒</th>
+          <th>啤酒</th>
+          <th>高粱酒</th>
+          <th>其他酒</th>
+          <th>操作</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  let allData = [];
+  let priceChart = null;
+
+  // Define an array of distinct colors for the chart lines
+  // 更新圖表顏色以符合新的主題色 (偏黃、木質、溫暖，避免酒紅)
+  const chartColors = [
+    'rgb(160, 82, 45)',    // Sienna (暖棕色)
+    'rgb(210, 180, 140)',  // Tan (淺棕褐色)
+    'rgb(139, 69, 19)',    // SaddleBrown (深棕色)
+    'rgb(255, 193, 7)',    // Amber (琥珀色) - 偏黃/酒黃
+    'rgb(188, 143, 143)',  // RosyBrown (玫瑰棕，柔和一些)
+    'rgb(205, 133, 63)',   // Peru (秘魯色，中等棕色)
+    'rgb(244, 164, 96)',   // SandyBrown (沙褐色，更淺)
+    'rgb(101, 67, 33)',     // Darker Brown
+    'rgb(240,212,140)',  // Khaki (卡其色) - 偏黃
+    'rgb(238,224,170)'   // PaleGoldenrod (淡金菊黃色) - 偏黃
+  ];
+
+
+  async function loadPrices(query = null) {
+    try {
       let data = [];
+
       if (query) {
-        // 使用 POST 查詢
         const res = await fetch('/api/prices', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(query)
         });
-        data = await res.json();
+
+        if (res.ok) {
+          data = await res.json();
+        } else {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
       } else {
-        // 預設載入全部
         const res = await fetch('/api/prices');
-        data = await res.json();
+
+        if (res.ok) {
+          data = await res.json();
+        } else {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
       }
-      const tbody = document.querySelector('#pricesTable tbody');
-      tbody.innerHTML = '';
-      if(data.length === 0) {
-        document.getElementById('searchMsg').textContent = '查無資料';
-      } else {
-        document.getElementById('searchMsg').textContent = '';
-        data.forEach(row => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${row.date}</td><td>${row.酒}</td><td>${row.米酒}</td><td>${row.啤酒}</td><td>${row.高粱酒}</td><td>${row.其他酒}</td><td><button class='delete-btn'>刪除</button></td>`;
-          tr.querySelector('.delete-btn').onclick = async function() {
-            if(confirm('確定要刪除這筆資料嗎？')) {
+
+      console.log('載入的數據:', data); // 除錯用，檢查數據格式
+
+      // 確保數據是陣列格式
+      if (!Array.isArray(data)) {
+        console.warn('數據格式不是陣列:', data);
+        data = [];
+      }
+
+      allData = data; // 儲存全部數據供圖表使用
+      displayData(data);
+      updateStats(data);
+      // Ensure chart is updated after data loads
+      if (data.length > 0) {
+        updateChart(); // Initial chart load
+      }
+    } catch (error) {
+      console.error('載入數據時發生錯誤:', error);
+      showMessage(`載入數據時發生錯誤: ${error.message}`, 'error');
+
+      // 如果載入失敗，顯示空的表格
+      displayData([]);
+      updateStats([]);
+    }
+  }
+
+  function displayData(data) {
+    const tbody = document.querySelector('#pricesTable tbody');
+    tbody.innerHTML = '';
+
+    if (!data || data.length === 0) {
+      document.getElementById('searchMsg').innerHTML = '<div class="message error">查無資料</div>';
+      return;
+    }
+
+    document.getElementById('searchMsg').innerHTML = '';
+
+    data.forEach((row, index) => {
+      try {
+        const tr = document.createElement('tr');
+
+        // 檢查數據屬性，支援不同的屬性名稱
+        const date = row.date || row.Date || row.日期 || '';
+        const wine = row.酒 || row.price_14 || row.wine || '0';
+        const riceWine = row.米酒 || row.price_133 || row.rice_wine || '0';
+        const beer = row.啤酒 || row.price_134 || row.beer || '0';
+        const kaoliang = row.高粱酒 || row.price_135 || row.kaoliang || '0';
+        const others = row.其他酒 || row.price_136 || row.others || '0';
+
+        tr.innerHTML = `
+            <td>${date}</td>
+            <td>${parseFloat(wine).toFixed(2)}</td>
+            <td>${parseFloat(riceWine).toFixed(2)}</td>
+            <td>${parseFloat(beer).toFixed(2)}</td>
+            <td>${parseFloat(kaoliang).toFixed(2)}</td>
+            <td>${parseFloat(others).toFixed(2)}</td>
+            <td><button class='btn btn-danger delete-btn'>刪除</button></td>
+          `;
+
+        tr.querySelector('.delete-btn').onclick = async function() {
+          if (confirm('確定要刪除這筆資料嗎？')) {
+            try {
               const res = await fetch('/api/delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  date: row.date,
-                  price_14: row.酒,
-                  price_133: row.米酒,
-                  price_134: row.啤酒,
-                  price_135: row.高粱酒,
-                  price_136: row.其他酒
+                  date: date,
+                  price_14: wine,
+                  price_133: riceWine,
+                  price_134: beer,
+                  price_135: kaoliang,
+                  price_136: others
                 })
               });
-              const msg = await res.text();
-              alert(msg);
-              loadPrices();
+
+              if (res.ok) {
+                const msg = await res.text();
+                showMessage(msg, 'success');
+                loadPrices();
+              } else {
+                throw new Error(`刪除失敗: HTTP ${res.status}`);
+              }
+            } catch (error) {
+              console.error('刪除錯誤:', error);
+              showMessage(`刪除失敗: ${error.message}`, 'error');
             }
-          };
-          tbody.appendChild(tr);
-        });
+          }
+        };
+
+        tbody.appendChild(tr);
+      } catch (error) {
+        console.error(`處理第${index}筆數據時發生錯誤:`, error, row);
+      }
+    });
+  }
+
+  // --- Start of Stat Counter Animation ---
+  function animateNumber(element, start, end, duration) {
+    let startTime = null;
+
+    function easeInOutQuad(t) {
+      return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    }
+
+    function animate(currentTime) {
+      if (!startTime) startTime = currentTime;
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+      const easedProgress = easeInOutQuad(progress);
+      const current = start + (end - start) * easedProgress;
+
+      if (element.classList.contains('float-number')) { // For float numbers
+        element.textContent = current.toFixed(2);
+      } else { // For integer numbers
+        element.textContent = Math.floor(current);
+      }
+
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
       }
     }
-    loadPrices();
+    requestAnimationFrame(animate);
+  }
+  // --- End of Stat Counter Animation ---
 
-    // 年月下拉選單初始化
-    function fillYearMonth(yearId, monthId) {
-      const yearSel = document.getElementById(yearId);
-      const monthSel = document.getElementById(monthId);
-      yearSel.innerHTML = '';
-      monthSel.innerHTML = '';
-      // 年份可不填，第一個選項為空白
+  function updateStats(data) {
+    const statsSection = document.getElementById('statsSection');
+
+    if (!data || data.length === 0) {
+      statsSection.innerHTML = '<div class="stat-card"><div class="stat-number">0</div><div class="stat-label">暫無數據</div></div>';
+      return;
+    }
+
+    try {
+      // 計算平均價格，支援不同的屬性名稱
+      const prices = {
+        酒: [],
+        米酒: [],
+        啤酒: [],
+        高粱酒: [],
+        其他酒: []
+      };
+
+      data.forEach(item => {
+        const wine = parseFloat(item.酒 || item.price_14 || item.wine || 0);
+        const riceWine = parseFloat(item.米酒 || item.price_133 || item.rice_wine || 0);
+        const beer = parseFloat(item.啤酒 || item.price_134 || item.beer || 0);
+        const kaoliang = parseFloat(item.高粱酒 || item.price_135 || item.kaoliang || 0);
+        const others = parseFloat(item.其他酒 || item.price_136 || item.others || 0);
+
+        if (!isNaN(wine) && wine > 0) prices.酒.push(wine);
+        if (!isNaN(riceWine) && riceWine > 0) prices.米酒.push(riceWine);
+        if (!isNaN(beer) && beer > 0) prices.啤酒.push(beer);
+        if (!isNaN(kaoliang) && kaoliang > 0) prices.高粱酒.push(kaoliang);
+        if (!isNaN(others) && others > 0) prices.其他酒.push(others);
+      });
+
+      const avgPrices = {
+        酒: prices.酒.length > 0 ? (prices.酒.reduce((a, b) => a + b, 0) / prices.酒.length) : 0,
+        米酒: prices.米酒.length > 0 ? (prices.米酒.reduce((a, b) => a + b, 0) / prices.米酒.length) : 0,
+        啤酒: prices.啤酒.length > 0 ? (prices.啤酒.reduce((a, b) => a + b, 0) / prices.啤酒.length) : 0,
+        高粱酒: prices.高粱酒.length > 0 ? (prices.高粱酒.reduce((a, b) => a + b, 0) / prices.高粱酒.length) : 0,
+        其他酒: prices.其他酒.length > 0 ? (prices.其他酒.reduce((a, b) => a + b, 0) / prices.其他酒.length) : 0
+      };
+
+      statsSection.innerHTML = `
+          <div class="stat-card">
+            <div class="stat-number float-number" data-target="${avgPrices.酒.toFixed(2)}">0.00</div>
+            <div class="stat-label">酒類平均價格</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number float-number" data-target="${avgPrices.米酒.toFixed(2)}">0.00</div>
+            <div class="stat-label">米酒平均價格</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number float-number" data-target="${avgPrices.啤酒.toFixed(2)}">0.00</div>
+            <div class="stat-label">啤酒平均價格</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number float-number" data-target="${avgPrices.高粱酒.toFixed(2)}">0.00</div>
+            <div class="stat-label">高粱酒平均價格</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number float-number" data-target="${avgPrices.其他酒.toFixed(2)}">0.00</div>
+            <div class="stat-label">其他酒平均價格</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number integer-number" data-target="${data.length}">0</div>
+            <div class="stat-label">總筆數</div>
+          </div>
+        `;
+
+      // Trigger the number animation after injecting HTML
+      document.querySelectorAll('.stat-number').forEach(element => {
+        const target = parseFloat(element.getAttribute('data-target'));
+        const isFloat = element.classList.contains('float-number');
+        const startValue = isFloat ? 0.00 : 0;
+        animateNumber(element, startValue, target, 1000); // 1000ms = 1 second duration
+      });
+
+    } catch (error) {
+      console.error('統計計算錯誤:', error);
+      statsSection.innerHTML = '<div class="stat-card"><div class="stat-number">錯誤</div><div class="stat-label">統計計算失敗</div></div>';
+    }
+  }
+
+  function initChart() {
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    priceChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [] // Initialize with empty datasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: true,
+            text: '酒類價格趨勢'
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: '時間'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: '價格 (NT$)'
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function updateChart() {
+    if (!allData || allData.length === 0) {
+      console.log('沒有數據可以繪製圖表');
+      if (priceChart) {
+        priceChart.data.labels = [];
+        priceChart.data.datasets = [];
+        priceChart.update();
+      }
+      return;
+    }
+
+    try {
+      // Get selected alcohol types from checkboxes
+      const selectedAlcoholTypes = Array.from(document.querySelectorAll('#alcoholTypeCheckboxes input[type="checkbox"]:checked'))
+              .map(checkbox => checkbox.value);
+
+      if (selectedAlcoholTypes.length === 0) {
+        console.log('請至少選擇一種酒類來繪製圖表');
+        if (priceChart) {
+          priceChart.data.labels = [];
+          priceChart.data.datasets = [];
+          priceChart.update();
+        }
+        return;
+      }
+
+      const yearStart = parseInt(document.getElementById('chartYearStart').value) || 70;
+      const yearEnd = parseInt(document.getElementById('chartYearEnd').value) || 114;
+
+      const fieldMapping = {
+        '酒': ['酒', 'price_14', 'wine'],
+        '米酒': ['米酒', 'price_133', 'rice_wine'],
+        '啤酒': ['啤酒', 'price_134', 'beer'],
+        '高粱酒': ['高粱酒', 'price_135', 'kaoliang'],
+        '其他酒': ['其他酒', 'price_136', 'others']
+      };
+
+      const filteredData = allData.filter(item => {
+        const dateStr = item.date || item.Date || item.日期 || '';
+        const yearMatch = dateStr.match(/(\d+)年/);
+        if (!yearMatch) return false;
+
+        const year = parseInt(yearMatch[1]);
+        return year >= yearStart && year <= yearEnd;
+      }).sort((a, b) => {
+        const dateA = a.date || a.Date || a.日期 || '';
+        const dateB = b.date || b.Date || b.日期 || '';
+
+        const yearA = parseInt((dateA.match(/(\d+)年/) || [0, 0])[1]);
+        const monthA = parseInt((dateA.match(/(\d+)月/) || [0, 0])[1]);
+        const yearB = parseInt((dateB.match(/(\d+)年/) || [0, 0])[1]);
+        const monthB = parseInt((dateB.match(/(\d+)月/) || [0, 0])[1]);
+
+        if (yearA !== yearB) return yearA - yearB;
+        return monthA - monthB;
+      });
+
+      if (filteredData.length === 0) {
+        console.log('篩選後沒有數據');
+        if (priceChart) {
+          priceChart.data.labels = [];
+          priceChart.data.datasets = [];
+          priceChart.update();
+        }
+        return;
+      }
+
+      const labels = filteredData.map(item => item.date || item.Date || item.日期 || '');
+      const datasets = [];
+
+      selectedAlcoholTypes.forEach((type, index) => {
+        const prices = filteredData.map(item => {
+          const possibleFields = fieldMapping[type] || [type];
+          let value = 0;
+
+          for (const field of possibleFields) {
+            if (item[field] !== undefined && item[field] !== null && item[field] !== '') {
+              value = parseFloat(item[field]);
+              break;
+            }
+          }
+          return isNaN(value) ? 0 : value;
+        });
+
+        const colorIndex = index % chartColors.length; // Cycle through colors
+        const borderColor = chartColors[colorIndex];
+        const backgroundColor = borderColor.replace('rgb', 'rgba').replace(')', ', 0.1)'); // 10% opacity
+
+        datasets.push({
+          label: `${type}價格`,
+          data: prices,
+          borderColor: borderColor,
+          backgroundColor: backgroundColor,
+          tension: 0.4,
+          fill: false,
+          pointRadius: 3,
+          pointHoverRadius: 5
+        });
+      });
+
+      if (priceChart) {
+        priceChart.data.labels = labels;
+        priceChart.data.datasets = datasets;
+        priceChart.update();
+      }
+    } catch (error) {
+      console.error('圖表更新錯誤:', error);
+    }
+  }
+
+  function showMessage(text, type = 'success') {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}`;
+    messageDiv.textContent = text;
+
+    // 顯示在結果訊息區域
+    const resultMsg = document.getElementById('resultMsg');
+    resultMsg.innerHTML = '';
+    resultMsg.appendChild(messageDiv);
+
+    // 3秒後自動消失
+    setTimeout(() => {
+      messageDiv.remove();
+    }, 3000);
+  }
+
+  // 初始化年月下拉選單
+  function fillYearMonth(yearId, monthId, required = false) {
+    const yearSel = document.getElementById(yearId);
+    const monthSel = document.getElementById(monthId);
+    yearSel.innerHTML = '';
+    monthSel.innerHTML = '';
+
+    if (!required) {
       const emptyYearOpt = document.createElement('option');
       emptyYearOpt.value = '';
-      emptyYearOpt.textContent = '';
+      emptyYearOpt.textContent = '選擇年份';
       yearSel.appendChild(emptyYearOpt);
-      for(let y = 70; y <= 114; y++) {
-        const opt = document.createElement('option');
-        opt.value = y;
-        opt.textContent = y;
-        yearSel.appendChild(opt);
-      }
-      // 月份可不填，第一個選項為空白
+    }
+
+    for (let y = 70; y <= 114; y++) {
+      const opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = `民國${y}年`;
+      yearSel.appendChild(opt);
+    }
+
+    if (!required) {
       const emptyOpt = document.createElement('option');
       emptyOpt.value = '';
-      emptyOpt.textContent = '';
+      emptyOpt.textContent = '選擇月份';
       monthSel.appendChild(emptyOpt);
-      for(let m = 1; m <= 12; m++) {
-        const opt = document.createElement('option');
-        opt.value = m.toString().padStart(2, '0');
-        opt.textContent = m;
-        monthSel.appendChild(opt);
-      }
-      // 預設年份、月份都為空
-      yearSel.value = '';
-      monthSel.value = '';
     }
-    fillYearMonth('addYear', 'addMonth');
-    fillYearMonth('searchYear', 'searchMonth');
 
-    document.getElementById('priceForm').addEventListener('submit', async function() {
-      const form = this;
-      const year = form.year.value;
-      const month = form.month.value;
-      let date = '';
-      if(year && month) date = `${year}年${parseInt(month, 10)}月`;
-      else if(year) date = `${year}年`;
-      const body = {
-        date,
-        price_14: form.price_14.value,
-        price_133: form.price_133.value,
-        price_134: form.price_134.value,
-        price_135: form.price_135.value,
-        price_136: form.price_136.value
-      };
+    for (let m = 1; m <= 12; m++) {
+      const opt = document.createElement('option');
+      opt.value = m.toString().padStart(2, '0');
+      opt.textContent = `${m}月`;
+      monthSel.appendChild(opt);
+    }
+  }
+
+  function fillChartYearSelects() {
+    const startSelect = document.getElementById('chartYearStart');
+    const endSelect = document.getElementById('chartYearEnd');
+
+    for (let y = 70; y <= 114; y++) {
+      const startOpt = document.createElement('option');
+      startOpt.value = y;
+      startOpt.textContent = `民國${y}年`;
+      startSelect.appendChild(startOpt);
+
+      const endOpt = document.createElement('option');
+      endOpt.value = y;
+      endOpt.textContent = `民國${y}年`;
+      endSelect.appendChild(endOpt);
+    }
+
+    startSelect.value = 100; // 預設從民國100年開始
+    endSelect.value = 114;   // 預設到民國114年結束
+  }
+
+  // New function to create alcohol type checkboxes
+  function createAlcoholTypeCheckboxes() {
+    const checkboxContainer = document.getElementById('alcoholTypeCheckboxes');
+    checkboxContainer.innerHTML = ''; // Clear existing content
+
+    const alcoholTypes = ['酒', '米酒', '啤酒', '高粱酒', '其他酒'];
+
+    alcoholTypes.forEach((type, index) => {
+      const label = document.createElement('label');
+      label.className = 'alcohol-checkbox-label'; // Add a class for potential future styling
+
+      const colorBox = document.createElement('span');
+      colorBox.className = 'color-box';
+      colorBox.style.backgroundColor = chartColors[index % chartColors.length]; // Assign color from array
+      label.appendChild(colorBox);
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.value = type;
+      checkbox.checked = (type === '酒'); // Default select '酒'
+      checkbox.addEventListener('change', updateChart); // Update chart on change
+      label.appendChild(checkbox);
+
+      const text = document.createTextNode(type);
+      label.appendChild(text);
+
+      checkboxContainer.appendChild(label);
+    });
+  }
+
+  // 表單提交處理
+  document.getElementById('priceForm').addEventListener('submit', async function() {
+    const form = this;
+    const year = form.year.value;
+    const month = form.month.value;
+    let date = '';
+
+    if (year && month) date = `${year}年${parseInt(month, 10)}月`;
+    else if (year) date = `${year}年`;
+
+    const body = {
+      date,
+      price_14: form.price_14.value,
+      price_133: form.price_133.value,
+      price_134: form.price_134.value,
+      price_135: form.price_135.value,
+      price_136: form.price_136.value
+    };
+
+    try {
       const res = await fetch('/api/insert', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-      const msg = await res.text();
-      document.getElementById('resultMsg').textContent = msg;
-      loadPrices();
-    });
 
-    document.getElementById('searchForm').addEventListener('submit', async function() {
-      const form = this;
-      const year = form.year.value;
-      const month = form.month.value;
-      let date = '';
-      if(year && month) date = `${year}年${parseInt(month, 10)}月`;
-      else if(year) date = `${year}年`;
-      else if(month) date = `${parseInt(month, 10)}月`;
-      const query = {};
-      if(date) query.date = date;
-      if(form.price_14.value) query.price_14 = form.price_14.value;
-      if(form.price_133.value) query.price_133 = form.price_133.value;
-      if(form.price_134.value) query.price_134 = form.price_134.value;
-      if(form.price_135.value) query.price_135 = form.price_135.value;
-      if(form.price_136.value) query.price_136 = form.price_136.value;
-      await loadPrices(query);
-    });
-  </script>
+      if (res.ok) {
+        const msg = await res.text();
+        showMessage(msg, 'success');
+        form.reset();
+        loadPrices();
+      } else {
+        throw new Error(`新增失敗: HTTP ${res.status}`);
+      }
+    } catch (error) {
+      console.error('新增數據錯誤:', error);
+      showMessage(`新增失敗: ${error.message}`, 'error');
+    }
+  });
+
+  document.getElementById('searchForm').addEventListener('submit', async function() {
+    const form = this;
+    const year = form.year.value;
+    const month = form.month.value;
+    let date = '';
+
+    if (year && month) date = `${year}年${parseInt(month, 10)}月`;
+    else if (year) date = `${year}年`;
+    else if (month) date = `${parseInt(month, 10)}月`;
+
+    const query = {};
+    if (date) query.date = date;
+    if (form.price_14.value) query.price_14 = form.price_14.value;
+    if (form.price_133.value) query.price_133 = form.price_133.value;
+    if (form.price_134.value) query.price_134 = form.price_134.value;
+    if (form.price_135.value) query.price_135 = form.price_135.value;
+    if (form.price_136.value) query.price_136 = form.price_136.value;
+
+
+    await loadPrices(query);
+  });
+
+  // 初始化
+  document.addEventListener('DOMContentLoaded', function() {
+    fillYearMonth('addYear', 'addMonth', true);
+    fillYearMonth('searchYear', 'searchMonth');
+    fillChartYearSelects();
+    createAlcoholTypeCheckboxes(); // Create checkboxes on load
+    // Add event listeners to year selects to update chart
+    document.getElementById('chartYearStart').addEventListener('change', updateChart);
+    document.getElementById('chartYearEnd').addEventListener('change', updateChart);
+    initChart();
+    loadPrices();
+  });
+</script>
 </body>
-
 </html>
